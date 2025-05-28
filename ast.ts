@@ -1,0 +1,1 @@
+export type NodeType = "Number" | "Identifier" | "BinaryOperator" | "Let" | "If" | "Else" | "While" | "For" | "Function";
