@@ -6,6 +6,7 @@ export enum TokenType{
     ClosePaerenn,
     BinaryOperator,
     Let,//let
+    EOF, //end of file
 }
 const KEYWORDS: Record<string, TokenType> = {
     "let": TokenType.Let,
@@ -14,6 +15,7 @@ const KEYWORDS: Record<string, TokenType> = {
     "while": TokenType.Identifier,
     "for": TokenType.Identifier, 
     "function": TokenType.Identifier, 
+
 };
 export interface Token {
     value: string;
@@ -78,10 +80,11 @@ export function tokenize (sourceCode: string): Token[] {
             }
         }
     }
+    tokens.push(token("", TokenType.EOF)); //end of file token
     return tokens;
 }
 
-const source = await Deno.readTextFile("./test.txt");
-for (const token of tokenize(source)){
-    console.log(token);
-}
+// const source = await Deno.readTextFile("./test.txt");
+// for (const token of tokenize(source)){
+//     console.log(token);
+// }
