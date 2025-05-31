@@ -1,4 +1,4 @@
-import { Stemt,Program, Expr, BinaryExpr, Identifier, NumericLiteral } from './ast.ts';
+import { Stemt,Program, Expr, BinaryExpr, Identifier, NumericLiteral,NullLiteral } from './ast.ts';
 import { Token,tokenize,TokenType } from './lexer.ts';
 
 export default class Parser {
@@ -81,12 +81,15 @@ export default class Parser {
     private parse_primary_expr(): Expr {
         const tk = this.at().type;
         switch (tk) {
+            case TokenType.Null:
+                this.eats();
+                return {kind: "NullLiteral", value: "null"} as NullLiteral;
             case TokenType.Identifier: 
                 return {kind: "Identifier", symbol: this.eats().value} as Identifier;
             case TokenType.Number:
                 return {kind: "NumericLiteral", value: parseFloat(this.eats().value)} as NumericLiteral;
             case TokenType.OpenPaeren:
-                this.eats(); //consume the '('
+                this.eats();
                 const expr = this.parse_expr();
                 this.expect(TokenType.ClosePaerenn, "Unexpected token, expected closing parenthesis"); //consume the ')'
                 return expr;
