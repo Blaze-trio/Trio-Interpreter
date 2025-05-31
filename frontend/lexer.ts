@@ -47,7 +47,7 @@ export function tokenize (sourceCode: string): Token[] {
             tokens.push(token(src.shift(), TokenType.OpenPaeren));
         }else if(src[0] == ')'){
             tokens.push(token(src.shift(), TokenType.ClosePaerenn));
-        }else if(src[0] == '+' || src[0] == '-' || src[0] == '*' || src[0] == '/'){
+        }else if(src[0] == '+' || src[0] == '-' || src[0] == '*' || src[0] == '/' || src[0] == '%'){
             tokens.push(token(src.shift(), TokenType.BinaryOperator));
         }else if(src[0] == '='){
             tokens.push(token(src.shift(), TokenType.Equals));
