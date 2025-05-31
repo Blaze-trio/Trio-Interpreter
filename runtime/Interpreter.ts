@@ -1,5 +1,5 @@
-import { ValueType, runtimeValue, NullValue, NumberValue } from "./value";
-import { NodeType, Stemt, NumericLiteral, BinaryExpr, Program } from "../frontend/ast";
+import { ValueType, runtimeValue, NullValue, NumberValue } from "./value.ts";
+import { NodeType, Stemt, NumericLiteral, BinaryExpr, Program } from "../frontend/ast.ts";
 function eval_numeric_binary_expr(lhs: NumberValue, rhs: NumberValue, operator: string): NumberValue {
     let result: number;
     if(operator == "+") {
