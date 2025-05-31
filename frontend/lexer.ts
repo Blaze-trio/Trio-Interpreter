@@ -1,7 +1,7 @@
 export enum TokenType{
-    Null,
     Number,
     Identifier,
+    String,
     Equals,
     OpenPaeren,
     ClosePaerenn,
@@ -16,7 +16,6 @@ const KEYWORDS: Record<string, TokenType> = {
     "while": TokenType.Identifier,
     "for": TokenType.Identifier, 
     "function": TokenType.Identifier, 
-    "null": TokenType.Null,
 };
 export interface Token {
     value: string;

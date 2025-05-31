@@ -1,5 +1,6 @@
-import { ValueType, runtimeValue, NullValue, NumberValue } from "./value.ts";
-import { NodeType, Stemt, NumericLiteral, BinaryExpr, Program } from "../frontend/ast.ts";
+import { ValueType, runtimeValue, NumberValue, MK_NULL } from "./value.ts";
+import { NodeType, Stemt, NumericLiteral, BinaryExpr, Program, Identifier } from "../frontend/ast.ts";
+import Environment from "./environment.ts";
 function eval_numeric_binary_expr(lhs: NumberValue, rhs: NumberValue, operator: string): NumberValue {
     let result: number;
     if(operator == "+") {
@@ -22,31 +23,36 @@ function eval_numeric_binary_expr(lhs: NumberValue, rhs: NumberValue, operator: 
     }
     return {type: "number", value: result};
 }
-function evaluateBinaryExpr(astNode: BinaryExpr): runtimeValue {
-    const lhs = evaluate(astNode.left);
-    const rhs = evaluate(astNode.right);
+function evaluateBinaryExpr(astNode: BinaryExpr, env: Environment): runtimeValue {
+    const lhs = evaluate(astNode.left, env);
+    const rhs = evaluate(astNode.right, env);
     if (lhs.type == "number" && rhs.type == "number") {
         return eval_numeric_binary_expr(lhs as NumberValue, rhs as NumberValue, astNode.operator);
     }
-    return {type: "null", value: null} as NullValue;
+    return MK_NULL();
 }
-function evaluateProgram(astNode: Program): runtimeValue {
-    let lastEvaluated: runtimeValue = {value: null, type: "null"} as NullValue;
+function evaluateProgram(astNode: Program, env: Environment): runtimeValue {
+    let lastEvaluated: runtimeValue = MK_NULL();
     for (const statement of astNode.body) {
-        lastEvaluated = evaluate(statement);
+        lastEvaluated = evaluate(statement,env);
     }
     return lastEvaluated;
 }
-export function evaluate(astNode: Stemt): runtimeValue {
+function eval_identifier(astNode: Identifier, env: Environment): runtimeValue {
+    const value = env.lookupVariable(astNode.symbol);
+    return value || MK_NULL();
+}
+
+export function evaluate(astNode: Stemt, env: Environment): runtimeValue {
     switch (astNode.kind) {
         case "NumericLiteral":
             return {value: (astNode as NumericLiteral).value, type: "number"} as NumberValue;
-        case "NullLiteral":
-            return {value: null, type: "null"} as NullValue;
+        case "Identifier":
+            return eval_identifier(astNode as Identifier, env);
         case "BinaryExpr":
-            return evaluateBinaryExpr(astNode as BinaryExpr);
+            return evaluateBinaryExpr(astNode as BinaryExpr, env);
         case "Program":
-            return evaluateProgram(astNode as Program);
+            return evaluateProgram(astNode as Program, env);
         default:
             console.error("Trio's interpreter error: Unsupported AST node kind", astNode.kind);
             Deno.exit(1);
