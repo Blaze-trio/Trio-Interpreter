@@ -1,5 +1,5 @@
 import { ValueType } from '../runtime/value.ts';
-import { Stemt,Program, Expr, BinaryExpr, Identifier, NumericLiteral, VariableDeclaration} from './ast.ts';
+import { Stemt,Program, Expr, BinaryExpr, Identifier, NumericLiteral, VariableDeclaration, AssignmentExpr} from './ast.ts';
 import { Token,tokenize,TokenType } from './lexer.ts';
 
 export default class Parser {
@@ -60,7 +60,17 @@ export default class Parser {
         return declaration;
     }
     private parse_expr(): Expr {
-        return this.parse_additive_expr();
+        return this.parse_assignment_expr();
+    }
+    //let x = foo + bar;
+    private parse_assignment_expr(): Expr {
+                const left = this.parse_additive_expr();//maybe objectExpr, function call, etc.
+        if(this.at().type == TokenType.Equals) {
+            this.eats();
+            const right = this.parse_assignment_expr();//alows chaning the value of a variable
+            return {kind: "AssignmentExpr",assignee: left,value: right,} as AssignmentExpr;
+        }
+        return left;
     }
     // 10 + 5 - 5 left hand is more important
     private parse_additive_expr(): Expr {

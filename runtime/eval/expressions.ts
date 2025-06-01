@@ -1,7 +1,7 @@
 import { NumberValue, runtimeValue, MK_NULL } from "../value.ts";
 import { evaluate } from "../Interpreter.ts";
 import Environment from "../environment.ts";
-import { BinaryExpr, Identifier } from "../../frontend/ast.ts";
+import { AssignmentExpr, BinaryExpr, Identifier } from "../../frontend/ast.ts";
 
 function eval_numeric_binary_expr(lhs: NumberValue, rhs: NumberValue, operator: string): NumberValue {
     let result: number;
@@ -37,4 +37,12 @@ export function evaluateBinaryExpr(astNode: BinaryExpr, env: Environment): runti
 export function eval_identifier(astNode: Identifier, env: Environment): runtimeValue {
     const value = env.lookupVariable(astNode.symbol);
     return value || MK_NULL();
+}
+
+export function eval_assignment_expr(astNode: AssignmentExpr, env: Environment): runtimeValue {
+    if (astNode.assignee.kind !== "Identifier") {
+        throw 'Trio\'s interpreter error: Assignment target must be an identifier. $(JSON.stringify(astNode.assignee))';
+    }
+    const identifier = (astNode.assignee as Identifier).symbol;
+    return env.assignVariable(identifier, evaluate(astNode.value, env));
 }

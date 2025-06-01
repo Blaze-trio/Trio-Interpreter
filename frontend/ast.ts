@@ -1,4 +1,4 @@
-export type NodeType = "Program" | "VariableDeclaration" | "NumericLiteral" | "Identifier" | "BinaryExpr";
+export type NodeType = "Program" | "VariableDeclaration" | "NumericLiteral" | "Identifier" | "BinaryExpr" | "AssignmentExpr";
 export interface Stemt{
     kind: NodeType;
 }
@@ -13,6 +13,13 @@ export interface VariableDeclaration extends Stemt {
     value?: Expr;
 }
 export interface Expr extends Stemt {}
+//let x = {foo: 1, bar: 2};
+//x.foo = foobar; so that is why we need assignee is Expr
+export interface AssignmentExpr extends Expr {
+    kind: "AssignmentExpr";
+    assignee: Expr;
+    value: Expr;
+}
 export interface BinaryExpr extends Expr {
     left : Expr;
     right: Expr;
