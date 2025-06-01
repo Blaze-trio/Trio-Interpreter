@@ -7,10 +7,10 @@ repl();
 async function repl() {
     const parser = new Parser();
     const env = new Environment();
-    env.declareVariable("x", MK_NUMBER(100));
-    env.declareVariable("true", MK_BOOL(true));
-    env.declareVariable("false", MK_BOOL(false));
-    env.declareVariable("null", MK_NULL());
+    env.declareVariable("x", MK_NUMBER(100), false);
+    env.declareVariable("true", MK_BOOL(true), true);
+    env.declareVariable("false", MK_BOOL(false), true);
+    env.declareVariable("null", MK_NULL(), true);
     console.log("Repl V0.1");
     while (true) {
         const  input = prompt("Trio>");
