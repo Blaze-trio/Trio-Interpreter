@@ -1,10 +1,16 @@
-export type NodeType = "Program" | "NumericLiteral" | "Identifier" | "BinaryExpr";
+export type NodeType = "Program" | "VariableDeclaration" | "NumericLiteral" | "Identifier" | "BinaryExpr";
 export interface Stemt{
     kind: NodeType;
 }
 export interface Program extends Stemt {
     kind: "Program";
     body: Stemt[];
+}
+export interface VariableDeclaration extends Stemt {
+    kind: "VariableDeclaration";
+    const: boolean;
+    identifier: string;
+    value?: Expr;
 }
 export interface Expr extends Stemt {}
 export interface BinaryExpr extends Expr {

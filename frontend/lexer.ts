@@ -3,14 +3,17 @@ export enum TokenType{
     Identifier,
     String,
     Equals,
+    SemiColon,
     OpenPaeren,
     ClosePaerenn,
     BinaryOperator,
     Let,//let
+    Const,
     EOF, //end of file
 }
 const KEYWORDS: Record<string, TokenType> = {
     "let": TokenType.Let,
+    "const": TokenType.Const,
     "if": TokenType.Identifier, 
     "else": TokenType.Identifier, 
     "while": TokenType.Identifier,
@@ -51,6 +54,8 @@ export function tokenize (sourceCode: string): Token[] {
             tokens.push(token(src.shift(), TokenType.BinaryOperator));
         }else if(src[0] == '='){
             tokens.push(token(src.shift(), TokenType.Equals));
+        }else if(src[0] == ';'){
+            tokens.push(token(src.shift(), TokenType.SemiColon));
         }else{
             //more than one character
             if(isInt(src[0])){

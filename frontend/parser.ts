@@ -1,4 +1,5 @@
-import { Stemt,Program, Expr, BinaryExpr, Identifier, NumericLiteral} from './ast.ts';
+import { ValueType } from '../runtime/value.ts';
+import { Stemt,Program, Expr, BinaryExpr, Identifier, NumericLiteral, VariableDeclaration} from './ast.ts';
 import { Token,tokenize,TokenType } from './lexer.ts';
 
 export default class Parser {
@@ -34,7 +35,29 @@ export default class Parser {
         return program;
     }
     private parse_stemt(): Stemt{
-        return this.parse_expr();
+        switch(this.at().type) {
+            case TokenType.Let:
+            case TokenType.Const:
+                return this.parse_variable_declaration();
+            default:
+                return this.parse_expr();
+        }
+    }
+    //let or const
+    parse_variable_declaration(): Stemt {
+        const isConst = this.eats().type == TokenType.Const;
+        const identifier = this.expect(TokenType.Identifier, "Trio found unexpected token, expected identifier").value;
+        if(this.at().type == TokenType.SemiColon) {
+            this.eats(); //consume the ';'
+            if(isConst){
+                throw "Trio cannot declare constant variable without value";
+            }
+            return {kind: "VariableDeclaration", const: false, value: undefined, identifier} as VariableDeclaration;
+        }
+        this.expect(TokenType.Equals, "Trio found unexpected token, expected '=' after variable declaration");
+        const declaration = {kind: "VariableDeclaration", const: isConst, value: this.parse_expr(), identifier} as VariableDeclaration;
+        this.expect(TokenType.SemiColon, "Trio's variable declaration statement must end with semicolon.");
+        return declaration;
     }
     private parse_expr(): Expr {
         return this.parse_additive_expr();
