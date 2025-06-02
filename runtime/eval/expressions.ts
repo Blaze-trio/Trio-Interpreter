@@ -1,7 +1,7 @@
-import { NumberValue, runtimeValue, MK_NULL, ObjectValue } from "../value.ts";
+import { NumberValue, runtimeValue, MK_NULL, ObjectValue, NativeFunctionValue } from "../value.ts";
 import { evaluate } from "../Interpreter.ts";
 import Environment from "../environment.ts";
-import { AssignmentExpr, BinaryExpr, Identifier, ObjectLiteral } from "../../frontend/ast.ts";
+import { AssignmentExpr, BinaryExpr, CallExpr, Identifier, ObjectLiteral } from "../../frontend/ast.ts";
 
 function eval_numeric_binary_expr(lhs: NumberValue, rhs: NumberValue, operator: string): NumberValue {
     let result: number;
@@ -57,4 +57,14 @@ export function eval_object_expr(astNode: ObjectLiteral, env: Environment): runt
   }
 
   return object;
+}
+export function eval_call_expr(astNode: CallExpr, env: Environment): runtimeValue {
+  const args = astNode.args.map((arg) => evaluate(arg, env));
+  const func = evaluate(astNode.callee, env);
+  if(func.type !== "nativefunction" && func.type !== "function") {
+    throw `Trio's interpreter error: Expected a function or native function, but got ${func.type}`;
+  }
+  const result = (func as NativeFunctionValue).call(args, env);
+
+  return result;
 }

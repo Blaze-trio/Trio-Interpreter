@@ -1,4 +1,4 @@
-import { runtimeValue, MK_BOOL,MK_NULL, MK_NUMBER } from "./value.ts";
+import { runtimeValue, MK_BOOL,MK_NULL, MK_NUMBER, MK_NATIVE_FUNCTION } from "./value.ts";
 export function createGlobalEnvironment() {
     //declare global variables and constants here my bros
     const env = new Environment();
@@ -6,7 +6,15 @@ export function createGlobalEnvironment() {
     env.declareVariable("true", MK_BOOL(true), true);
     env.declareVariable("false", MK_BOOL(false), true);
     env.declareVariable("x", MK_NUMBER(0), true);
-    return env
+    env.declareVariable("TrioPrint", MK_NATIVE_FUNCTION((args, env) => {
+        console.log("TrioPrint:", ...args);
+        return MK_NULL();
+    }), true);
+    function timeFunction(args: runtimeValue[], env: Environment): runtimeValue {
+        return MK_NUMBER(Date.now());
+    }
+    env.declareVariable("TrioTime", MK_NATIVE_FUNCTION(timeFunction), true);
+    return env;
 }
 export default class Environment{
     private parent?: Environment;

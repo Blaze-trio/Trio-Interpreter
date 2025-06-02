@@ -1,4 +1,6 @@
-export type ValueType = "null" | "number" | "boolean" | "string" | "object" | "array" | "function" | "undefined";
+import Environment from "./environment.ts";
+
+export type ValueType = "null" | "number" | "boolean" | "string" | "object" | "array" | "function" | "undefined" | "nativefunction" | "class" | "instance";
 
 export interface runtimeValue {
     type: ValueType;
@@ -27,4 +29,12 @@ export function MK_BOOL(b = true): BooleanValue {
 export interface ObjectValue extends runtimeValue {
     type: "object",
     properties: Map<string, runtimeValue>;
+}
+export type FunctionCall = (args: runtimeValue[], env: Environment) => runtimeValue;
+export interface NativeFunctionValue extends runtimeValue {
+    type: "nativefunction",
+    call: FunctionCall
+}
+export function MK_NATIVE_FUNCTION(call: FunctionCall) {
+    return {type: "nativefunction", call} as NativeFunctionValue;
 }

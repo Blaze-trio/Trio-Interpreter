@@ -142,16 +142,16 @@ export default class Parser {
             return member;
         }
     }
-    private parse_call_expr(callee: Expr): Expr {
-        let callExpr: Expr = {
-            kind: "CallExpr",
-            callee,
-            args: this.parse_arguments_list(),
+    private parse_call_expr(caller: Expr): Expr {
+        let call_expr: Expr = {
+        kind: "CallExpr",
+        callee: caller,
+        args: this.parse_args(),
         } as CallExpr;
-        if(this.at().type == TokenType.SemiColon) {
-            callExpr = this.parse_call_expr(callee);
+        if (this.at().type == TokenType.OpenParen) {
+        call_expr = this.parse_call_expr(call_expr);
         }
-        return callExpr;
+        return call_expr;
     }
     //add(x + 5,foo) expression is parsed as arguments
     private parse_args(): Expr[] {
