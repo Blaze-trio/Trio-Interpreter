@@ -1,0 +1,9 @@
+let foo = 42;
+const obj = { 
+    i: 100,
+    y: 20, 
+    foo,
+    complex: {
+        bar: true,
+    }, 
+};

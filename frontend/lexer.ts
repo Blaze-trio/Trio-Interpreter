@@ -3,9 +3,10 @@ export enum TokenType{
     Identifier,
     String,
     Equals,
-    SemiColon,
-    OpenPaeren,
-    ClosePaerenn,
+    SemiColon, Comma, Colon,
+    OpenParen,// (
+    CloseParen,// )
+    OpenBrace, CloseBrace, // { }
     BinaryOperator,
     Let,//let
     Const,
@@ -34,7 +35,7 @@ function isalpha(src:string){
     return src.toUpperCase() != src.toLowerCase();
 }
 function isskippable(src: string) {
-    return src == ' ' || src == '\n' || src == '\t';
+    return src == ' ' || src == '\n' || src == '\t' || src == '\r' || src == '\f';
 }
 function isInt(src: string) {
     const c = src.charCodeAt(0);
@@ -47,15 +48,23 @@ export function tokenize (sourceCode: string): Token[] {
     //building the tokens
     while (src.length > 0) {
         if(src[0] == '('){
-            tokens.push(token(src.shift(), TokenType.OpenPaeren));
+            tokens.push(token(src.shift(), TokenType.OpenParen));
         }else if(src[0] == ')'){
-            tokens.push(token(src.shift(), TokenType.ClosePaerenn));
+            tokens.push(token(src.shift(), TokenType.CloseParen));
+        }else if(src[0] == '{'){
+            tokens.push(token(src.shift(), TokenType.OpenBrace));
+        }else if(src[0] == '}'){
+            tokens.push(token(src.shift(), TokenType.CloseBrace));
         }else if(src[0] == '+' || src[0] == '-' || src[0] == '*' || src[0] == '/' || src[0] == '%'){
             tokens.push(token(src.shift(), TokenType.BinaryOperator));
         }else if(src[0] == '='){
             tokens.push(token(src.shift(), TokenType.Equals));
         }else if(src[0] == ';'){
             tokens.push(token(src.shift(), TokenType.SemiColon));
+        }else if(src[0] == ','){
+            tokens.push(token(src.shift(), TokenType.Comma));
+        }else if(src[0] == ':'){
+            tokens.push(token(src.shift(), TokenType.Colon));
         }else{
             //more than one character
             if(isInt(src[0])){

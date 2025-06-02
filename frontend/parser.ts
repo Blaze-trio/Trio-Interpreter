@@ -1,5 +1,5 @@
 import { ValueType } from '../runtime/value.ts';
-import { Stemt,Program, Expr, BinaryExpr, Identifier, NumericLiteral, VariableDeclaration, AssignmentExpr} from './ast.ts';
+import { Stemt,Program, Expr, BinaryExpr, Identifier, NumericLiteral, VariableDeclaration, AssignmentExpr, PropertyLiteral, ObjectLiteral} from './ast.ts';
 import { Token,tokenize,TokenType } from './lexer.ts';
 
 export default class Parser {
@@ -44,7 +44,7 @@ export default class Parser {
         }
     }
     //let or const
-    parse_variable_declaration(): Stemt {
+    private parse_variable_declaration(): Stemt {
         const isConst = this.eats().type == TokenType.Const;
         const identifier = this.expect(TokenType.Identifier, "Trio found unexpected token, expected identifier").value;
         if(this.at().type == TokenType.SemiColon) {
@@ -64,7 +64,7 @@ export default class Parser {
     }
     //let x = foo + bar;
     private parse_assignment_expr(): Expr {
-                const left = this.parse_additive_expr();//maybe objectExpr, function call, etc.
+        const left = this.parse_object_expr();//maybe objectExpr, function call, etc.
         if(this.at().type == TokenType.Equals) {
             this.eats();
             const right = this.parse_assignment_expr();//alows chaning the value of a variable
@@ -72,6 +72,50 @@ export default class Parser {
         }
         return left;
     }
+    private parse_object_expr(): Expr {
+    // { Prop[] }
+    if (this.at().type !== TokenType.OpenBrace) {
+      return this.parse_additive_expr();
+    }
+
+    this.eats(); // advance past open brace.
+    const properties = new Array<PropertyLiteral>();
+
+    while (this.not_eof() && this.at().type != TokenType.CloseBrace) {
+      const key =
+        this.expect(TokenType.Identifier, "Object literal key exprected").value;
+
+      // Allows shorthand key: pair -> { key, }
+      if (this.at().type == TokenType.Comma) {
+        this.eats(); // advance past comma
+        properties.push({ key, kind: "PropertyLiteral" } as PropertyLiteral);
+        continue;
+      } // Allows shorthand key: pair -> { key }
+      else if (this.at().type == TokenType.CloseBrace) {
+        properties.push({ key, kind: "PropertyLiteral" } as PropertyLiteral);
+        continue;
+      }
+
+      // { key: val }
+      this.expect(
+        TokenType.Colon,
+        "Missing colon following identifier in ObjectExpr",
+      );
+      const value = this.parse_expr();
+
+      properties.push({ kind: "PropertyLiteral", value, key });
+      if (this.at().type != TokenType.CloseBrace) {
+        this.expect(
+          TokenType.Comma,
+          "Expected comma or closing bracket following property",
+        );
+      }
+    }
+
+    this.expect(TokenType.CloseBrace, "Object literal missing closing brace.");
+    return { kind: "ObjectLiteral", properties } as ObjectLiteral;
+  }
+
     // 10 + 5 - 5 left hand is more important
     private parse_additive_expr(): Expr {
         let left = this.parse_multiplicative_expr();
@@ -118,10 +162,10 @@ export default class Parser {
                 return {kind: "Identifier", symbol: this.eats().value} as Identifier;
             case TokenType.Number:
                 return {kind: "NumericLiteral", value: parseFloat(this.eats().value)} as NumericLiteral;
-            case TokenType.OpenPaeren:
+            case TokenType.OpenParen:
                 this.eats();
                 const expr = this.parse_expr();
-                this.expect(TokenType.ClosePaerenn, "Unexpected token, expected closing parenthesis"); //consume the ')'
+                this.expect(TokenType.CloseParen, "Unexpected token, expected closing parenthesis"); //consume the ')'
                 return expr;
             default:
                 //trick the typescript compiler
