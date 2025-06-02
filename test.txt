@@ -1,4 +1,4 @@
-let foo = 42;
+const foo =  45/2;
 const obj = { 
     i: 100,
     y: 20, 

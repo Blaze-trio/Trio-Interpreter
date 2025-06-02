@@ -1,5 +1,5 @@
 import Parser from "./frontend/parser.ts";
-import Environment from "./runtime/environment.ts";
+import Environment, { createGlobalEnvironment } from "./runtime/environment.ts";
 import { evaluate } from "./runtime/Interpreter.ts";
 import { NumberValue, MK_NUMBER,MK_NULL,MK_BOOL } from "./runtime/value.ts";
 
@@ -7,7 +7,7 @@ run("./test.txt");
 //repl();
 async function repl() {
     const parser = new Parser();
-    const env = new Environment();
+    const env = createGlobalEnvironment();
 
     console.log("Repl V0.1");
     while (true) {
@@ -26,7 +26,7 @@ async function repl() {
 async function run(filename: string){
     console.log("Running TRIO's interpreter on file:", filename);
     const parser = new Parser();
-    const env = new Environment();
+    const env = createGlobalEnvironment();
 
     const  input = await Deno.readTextFile(filename);
     const program = parser.produceAST(input);
