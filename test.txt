@@ -7,3 +7,4 @@ const obj = {
         bar: true,
     }, 
 };
+let f = obj.complex.foo;

@@ -1,5 +1,5 @@
 import { ValueType } from '../runtime/value.ts';
-import { Stemt,Program, Expr, BinaryExpr, Identifier, NumericLiteral, VariableDeclaration, AssignmentExpr, PropertyLiteral, ObjectLiteral} from './ast.ts';
+import { Stemt,Program, Expr, BinaryExpr, Identifier, NumericLiteral, VariableDeclaration, AssignmentExpr, PropertyLiteral, ObjectLiteral, CallExpr, MemberExpr} from './ast.ts';
 import { Token,tokenize,TokenType } from './lexer.ts';
 
 export default class Parser {
@@ -120,10 +120,10 @@ export default class Parser {
         return left;
     }
     private parse_multiplicative_expr(): Expr {
-        let left = this.parse_primary_expr();
+        let left = this.parse_call_member_expr();
         while(this.at().value == '/' || this.at().value == '*' || this.at().value == '%'){
             const operator = this.eats().value;
-            const right = this.parse_primary_expr();
+            const right = this.parse_call_member_expr();
             left = {
                 kind: "BinaryExpr",
                 left,
@@ -133,15 +133,72 @@ export default class Parser {
         }
         return left;
     }
+    //foo.x()()
+    private parse_call_member_expr(): Expr {
+        const member = this.parse_member_expr();
+        if(this.at().type == TokenType.OpenParen) {
+            return this.parse_call_expr(member);
+        }else{
+            return member;
+        }
+    }
+    private parse_call_expr(callee: Expr): Expr {
+        let callExpr: Expr = {
+            kind: "CallExpr",
+            callee,
+            args: this.parse_arguments_list(),
+        } as CallExpr;
+        if(this.at().type == TokenType.SemiColon) {
+            callExpr = this.parse_call_expr(callee);
+        }
+        return callExpr;
+    }
+    //add(x + 5,foo) expression is parsed as arguments
+    private parse_args(): Expr[] {
+        this.expect(TokenType.OpenParen, "Trio found unexpected token, expected opening parenthesis '(' for function call before arguments");
+        const args = this.at().type == TokenType.CloseParen ? [] : this.parse_arguments_list();
+        this.expect(TokenType.CloseParen, "Trio found unexpected token, expected closing parenthesis ')' for function call after arguments");
+        return args;
+    }
+    //foo(x=5, y=10) so we can assign values to arguments
+    private parse_arguments_list(): Expr[] {
+        const args = [this.parse_assignment_expr()];
+        while(this.not_eof() && this.at().type == TokenType.Comma && this.eats()) {
+            args.push(this.parse_assignment_expr());
+        }
+        return args;
+    }
+    private parse_member_expr(): Expr {
+        let object = this.parse_primary_expr();
+        while (this.at().type == TokenType.Dot || this.at().type == TokenType.OpenBracket) {
+            const operator = this.eats();
+            let property: Expr;
+            let computed: boolean;
+            //non-computed value obj.expr
+            if(operator.type == TokenType.Dot){
+                computed = false;
+                property = this.parse_primary_expr();
+                if (property.kind !== "Identifier") {
+                    throw "Trio's member expression error: Expected identifier after dot operator.";
+                }
+            }else{//alows obj["expr"]
+                computed = true;
+                property = this.parse_expr();
+                this.expect(TokenType.CloseBracket, "Trio found unexpected token, expected closing bracket ']' after computed property access");
+            }
+            object = {kind: "MemberExpr", object, property, computed} as MemberExpr;
+        }
+        return object;
+    }
     //order of precedence:
     // AssignmentExpr
-    // MemberExpr
-    // FunctionCall
+    // ObjectExpr
     // LogicalExpr
     // ComparisonExpr
     // AdditiveExpr
     // MultiplicativeExpr
-    // UniaryExpr
+    // CallExpr
+    // MemberExpr
     // PrimaryExpr
     private parse_primary_expr(): Expr {
         const tk = this.at().type;

@@ -1,4 +1,4 @@
-export type NodeType = "Program" | "VariableDeclaration" | "NumericLiteral" | "PropertyLiteral" | "ObjectLiteral" | "Identifier" | "BinaryExpr" | "AssignmentExpr";
+export type NodeType = "Program" | "VariableDeclaration" | "NumericLiteral" | "PropertyLiteral" | "ObjectLiteral" | "Identifier" | "BinaryExpr" | "AssignmentExpr" | "MemberExpr" | "CallExpr";
 export interface Stemt{
     kind: NodeType;
 }
@@ -24,6 +24,19 @@ export interface BinaryExpr extends Expr {
     left : Expr;
     right: Expr;
     operator: string;
+}
+//foo.bar()
+//foo["bar"]() coumputed is true
+export interface MemberExpr extends Expr {
+    kind: "MemberExpr";
+    object: Expr;
+    property: Expr;
+    computed: boolean;
+}
+export interface CallExpr extends Expr {
+    kind: "CallExpr";
+    callee: Expr;
+    args: Expr[];
 }
 export interface Identifier extends Expr {
     kind: "Identifier";
