@@ -1,9 +1,9 @@
-import { NumberValue, runtimeValue, MK_NULL, ObjectValue, NativeFunctionValue, FunctionValue, ArrayValue, StringValue } from "../value.ts";
+import { NumberValue, runtimeValue, MK_NULL, ObjectValue, NativeFunctionValue, FunctionValue, ArrayValue, StringValue, MK_BOOL, BooleanValue } from "../value.ts";
 import { evaluate } from "../Interpreter.ts";
 import Environment from "../environment.ts";
 import { AssignmentExpr, BinaryExpr, CallExpr, Identifier, MemberExpr, NewExpr, ObjectLiteral } from "../../frontend/ast.ts";
 
-function eval_numeric_binary_expr(lhs: NumberValue, rhs: NumberValue, operator: string): NumberValue {
+function eval_numeric_binary_expr(lhs: NumberValue, rhs: NumberValue, operator: string): runtimeValue {
     let result: number;
     if(operator == "+") {
         result = lhs.value + rhs.value;
@@ -19,17 +19,49 @@ function eval_numeric_binary_expr(lhs: NumberValue, rhs: NumberValue, operator: 
         result = lhs.value / rhs.value;
     }else if(operator == "%") {
         result = lhs.value % rhs.value;
-    }else {
+    }else if(operator == "<") {
+        return MK_BOOL(lhs.value < rhs.value);
+    }else if(operator == "=<") {
+        return MK_BOOL(lhs.value <= rhs.value);
+    }else if(operator == ">") {
+        return MK_BOOL(lhs.value > rhs.value);
+    }else if(operator == "=>") {
+        return MK_BOOL(lhs.value >= rhs.value);
+    }else if(operator == "==") {
+        return MK_BOOL(lhs.value == rhs.value);
+    }else if(operator == "===") {
+        return MK_BOOL(lhs.value === rhs.value);
+    }else if(operator == "=~") {
+        return MK_BOOL(lhs.value !== rhs.value);
+    }else{
         console.error("Trio's interpreter error: Unsupported binary operator", operator);
         Deno.exit(1);
     }
-    return {type: "number", value: result};
+    return {type: "number", value: result} as NumberValue;
 }
 export function evaluateBinaryExpr(astNode: BinaryExpr, env: Environment): runtimeValue {
     const lhs = evaluate(astNode.left, env);
     const rhs = evaluate(astNode.right, env);
     if (lhs.type == "number" && rhs.type == "number") {
         return eval_numeric_binary_expr(lhs as NumberValue, rhs as NumberValue, astNode.operator);
+    }
+    if (lhs.type == "string" && rhs.type == "string") {
+        const lhsStr = (lhs as StringValue).value;
+        const rhsStr = (rhs as StringValue).value;
+        if(astNode.operator == "==") {
+            return MK_BOOL(lhsStr === rhsStr);
+        }else if(astNode.operator == "=~") {
+            return MK_BOOL(lhsStr !== rhsStr);
+        }
+    }
+    if (lhs.type == "boolean" && rhs.type == "boolean") {
+        const lhsBool = (lhs as BooleanValue).value;
+        const rhsBool = (rhs as BooleanValue).value;
+        if(astNode.operator == "==") {
+            return MK_BOOL(lhsBool === rhsBool);
+        }else if(astNode.operator == "=~") {
+            return MK_BOOL(lhsBool !== rhsBool);
+        }
     }
     return MK_NULL();
 }

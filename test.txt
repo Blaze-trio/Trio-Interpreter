@@ -23,3 +23,13 @@ arr[3] = true
 TrioPrint(arr[3])
 arr[4] = TrioNew TrioArray(2)
 TrioPrint(arr[4])
+arr.size
+TrioPrint(arr.size)
+
+TrioLet y = 5;
+
+TrioIf (y > 3) {
+    TrioPrint("y is greater than 3")
+} TrioElse {
+    TrioPrint("y is not greater than 3")
+}

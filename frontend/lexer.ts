@@ -10,19 +10,21 @@ export enum TokenType{
     OpenBrace, CloseBrace, // { }
     OpenBracket, CloseBracket, // [ ]//for computed values
     BinaryOperator,
+    ComparisonOperator,
     Let,//let
     Const,
     New,
+    If, Else, While, For,
     EOF, //end of file
     Fn, //function
 }
 const KEYWORDS: Record<string, TokenType> = {
     "TrioLet": TokenType.Let,
     "TrioConst": TokenType.Const,
-    "TrioIf": TokenType.Identifier, 
-    "TrioElse": TokenType.Identifier, 
-    "TrioWhile": TokenType.Identifier,
-    "TrioFor": TokenType.Identifier, 
+    "TrioIf": TokenType.If, 
+    "TrioElse": TokenType.Else, 
+    "TrioWhile": TokenType.While,
+    "TrioFor": TokenType.For, 
     "TrioFunc": TokenType.Fn, 
     "TrioNew": TokenType.New,
 };
@@ -71,9 +73,31 @@ export function tokenize (sourceCode: string): Token[] {
         }else if(src[0] == ']'){
             tokens.push(token(src.shift(), TokenType.CloseBracket));
         }else if(src[0] == '+' || src[0] == '-' || src[0] == '*' || src[0] == '/' || src[0] == '%'){
-            tokens.push(token(src.shift(), TokenType.BinaryOperator));
+            tokens.push(token(src.shift(), TokenType.BinaryOperator));        
         }else if(src[0] == '='){
-            tokens.push(token(src.shift(), TokenType.Equals));
+            src.shift();
+            if(src[1] == '='){
+                src.shift();
+                tokens.push(token("==", TokenType.ComparisonOperator));
+            }else if(src[2] == '='){
+                src.shift();src.shift();
+                tokens.push(token("===", TokenType.ComparisonOperator));
+            }else if(src[1] == '>'){
+                src.shift();
+                tokens.push(token("=>", TokenType.ComparisonOperator));
+            }else if(src[1] == '<'){
+                src.shift();
+                tokens.push(token("=<", TokenType.ComparisonOperator));
+            }else if(src[1] == '~'){
+                src.shift();
+                tokens.push(token("=~", TokenType.ComparisonOperator));
+            }else{
+                tokens.push(token("=", TokenType.Equals));
+            }
+        }else if(src[0] == '<'){
+            tokens.push(token(src.shift(), TokenType.ComparisonOperator));
+        }else if(src[0] == '>'){
+            tokens.push(token(src.shift(), TokenType.ComparisonOperator));
         }else if(src[0] == ';'){
             tokens.push(token(src.shift(), TokenType.SemiColon));
         }else if(src[0] == ','){

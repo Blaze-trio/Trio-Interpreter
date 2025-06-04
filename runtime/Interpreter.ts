@@ -1,8 +1,8 @@
 import { ValueType, runtimeValue, NumberValue, MK_NULL, StringValue } from "./value.ts";
-import { NodeType, Stemt, NumericLiteral, BinaryExpr, Program, Identifier, VariableDeclaration, AssignmentExpr, ObjectLiteral, CallExpr, FunctionDeclaration, StringLiteral, NewExpr, MemberExpr } from "../frontend/ast.ts";
+import { NodeType, Stemt, NumericLiteral, BinaryExpr, Program, Identifier, VariableDeclaration, AssignmentExpr, ObjectLiteral, CallExpr, FunctionDeclaration, StringLiteral, NewExpr, MemberExpr, IfStatement, ForStatement } from "../frontend/ast.ts";
 import Environment from "./environment.ts";
 import { eval_assignment_expr, eval_identifier, evaluateBinaryExpr, eval_object_expr, eval_call_expr, eval_new_expr, eval_member_expr } from "./eval/expressions.ts";
-import { evaluateFunctionDeclaration, evaluateProgram, evaluateVariableDeclaration } from "./eval/statments.ts";
+import { evaluateForStatement, evaluateFunctionDeclaration, evaluateIfStatement, evaluateProgram, evaluateVariableDeclaration } from "./eval/statments.ts";
 
 export function evaluate(astNode: Stemt, env: Environment): runtimeValue {
     switch (astNode.kind) {
@@ -30,6 +30,10 @@ export function evaluate(astNode: Stemt, env: Environment): runtimeValue {
             return evaluateVariableDeclaration(astNode as VariableDeclaration, env);
         case "FunctionDeclaration":
             return evaluateFunctionDeclaration(astNode as FunctionDeclaration, env);
+        case "IfStatement":
+            return evaluateIfStatement(astNode as IfStatement, env);
+        case "ForStatement":
+            return evaluateForStatement(astNode as ForStatement, env);
         default:
             console.error("Trio's interpreter error: Unsupported AST node kind", astNode.kind);
             Deno.exit(1);

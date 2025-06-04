@@ -1,5 +1,5 @@
 import { ValueType } from '../runtime/value.ts';
-import { Stemt,Program, Expr, BinaryExpr, Identifier, NumericLiteral, VariableDeclaration, FunctionDeclaration, AssignmentExpr, PropertyLiteral, ObjectLiteral, CallExpr, MemberExpr, StringLiteral, NewExpr} from './ast.ts';
+import { Stemt,Program, Expr, BinaryExpr, Identifier, NumericLiteral, VariableDeclaration, FunctionDeclaration, AssignmentExpr, PropertyLiteral, ObjectLiteral, CallExpr, MemberExpr, StringLiteral, NewExpr, IfStatement} from './ast.ts';
 import { Token,tokenize,TokenType } from './lexer.ts';
 
 export default class Parser {
@@ -35,16 +35,11 @@ export default class Parser {
         return program;
     }
     private parse_new_expr(): NewExpr {
-        this.eats(); // consume 'TrioNew'
-        
-        // Parse the constructor identifier (like TrioArray)
+        this.eats(); //consume 'TrioNew'
         const callee = this.parse_primary_expr();
-        
-        // Now expect the arguments in parentheses
         if(this.at().type !== TokenType.OpenParen) {
             throw "Trio Parser: Expected opening parenthesis '(' after constructor name in new expression";
         }
-        
         const args = this.parse_args();
         return {
             kind: "NewExpr",
@@ -131,8 +126,76 @@ export default class Parser {
                 return this.parse_variable_declaration();
             case TokenType.Fn:
                 return this.parse_function_declaration();
+            case TokenType.If:
+                return this.parse_if_statement();
+            case TokenType.For:
+                return this.parse_for_statement();
             default:
                 return this.parse_expr();
+        }
+    }
+    private parse_for_statement(): Stemt {
+        this.eats(); //consume 'TrioFor'
+        this.expect(TokenType.OpenParen, "Trio found unexpected token, expected opening parenthesis '(' after TrioFor");
+        let init: Stemt | undefined = undefined;
+        if (this.at().type !== TokenType.SemiColon) {
+            if (this.at().type === TokenType.Let || this.at().type === TokenType.Const) {
+                init = this.parse_variable_declaration();
+            } else {
+                init = this.parse_expr();
+                this.expect(TokenType.SemiColon, "Trio found unexpected token, expected ';' after TrioFor init");
+            }
+        } else {
+            this.eats();
+        }
+        let condition: Expr | undefined = undefined;
+        if (this.at().type !== TokenType.SemiColon) {
+            condition = this.parse_expr();
+        }
+        this.expect(TokenType.SemiColon, "Trio found unexpected token, expected semicolon ';' after TrioFor condition");
+        let increment: Expr | undefined = undefined;
+        if (this.at().type !== TokenType.CloseParen) {
+            increment = this.parse_expr();
+        }
+        this.expect(TokenType.CloseParen, "Trio found unexpected token, expected closing parenthesis ')' after TrioFor increment");
+        const body = this.parse_stemt();
+        return {
+            kind: "ForStatement",
+            init,
+            condition,
+            increment,
+            body: [body],
+        } as Stemt;
+    }
+    private parse_if_statement(): IfStatement {
+        this.eats(); //consume 'TrioIf'
+        this.expect(TokenType.OpenParen, "Trio found unexpected token, expected opening parenthesis '(' after TrioIf");
+        const condition = this.parse_expr();
+        this.expect(TokenType.CloseParen, "Trio found unexpected token, expected closing parenthesis ')' after TrioIf condition");
+        const thenBody = this.parse_block_or_statement();
+        let elseBody: Stemt[] | undefined = undefined;
+        if (this.at().type === TokenType.Else) {
+            this.eats(); //consume 'TrioElse'
+            elseBody = this.parse_block_or_statement();
+        }
+        return {
+            kind: "IfStatement",
+            condition,
+            thenBody,
+            elseBody,
+        } as IfStatement;
+    }
+    private parse_block_or_statement(): Stemt[] {
+        if (this.at().type === TokenType.OpenBrace) {
+            this.eats(); // consume '{'
+            const statements: Stemt[] = [];
+            while (this.not_eof() && this.at().type !== TokenType.CloseBrace) {
+                statements.push(this.parse_stemt());
+            }
+            this.expect(TokenType.CloseBrace, "Trio found unexpected token, expected closing brace '}' after block");
+            return statements;
+        } else {
+            return [this.parse_stemt()];
         }
     }
     private parse_function_declaration(): FunctionDeclaration {
@@ -194,7 +257,7 @@ export default class Parser {
     }
     private parse_object_expr(): Expr {
         if (this.at().type !== TokenType.OpenBrace) {
-        return this.parse_additive_expr();
+        return this.parse_comparison_expr();
         }
 
         this.eats(); 
@@ -224,8 +287,24 @@ export default class Parser {
         return { kind: "ObjectLiteral", properties } as ObjectLiteral;
     }
 
+    private parse_comparison_expr(): Expr {
+        console.log("Trio Debug: Parsing comparison expression");
+        let left = this.parse_additive_expr();
+        while(this.at().type === TokenType.ComparisonOperator){
+            const operator = this.eats().value;
+            const right = this.parse_additive_expr();
+            left = {
+                kind: "BinaryExpr",
+                left,
+                right,
+                operator,
+            } as BinaryExpr;
+        }
+        return left;
+    }
     // 10 + 5 - 5 left hand is more important
     private parse_additive_expr(): Expr {
+        console.log("Trio Debug: Parsing additive expression");
         let left = this.parse_multiplicative_expr();
         while(this.at().value == '+' || this.at().value == '-'){
             const operator = this.eats().value;
@@ -240,6 +319,7 @@ export default class Parser {
         return left;
     }
     private parse_multiplicative_expr(): Expr {
+        console.log("Trio Debug: Parsing multiplicative expression");
         let left = this.parse_call_member_expr();
         while(this.at().value == '/' || this.at().value == '*' || this.at().value == '%'){
             const operator = this.eats().value;
@@ -255,6 +335,7 @@ export default class Parser {
     }
     //foo.x()()
     private parse_call_member_expr(): Expr {
+        console.log("Trio Debug: Parsing call/member expression");
         const member = this.parse_member_expr();
         if(this.at().type == TokenType.OpenParen) {
             return this.parse_call_expr(member);
@@ -263,6 +344,7 @@ export default class Parser {
         }
     }
     private parse_call_expr(caller: Expr): Expr {
+        console.log("Trio Debug: Parsing call expression");
         let call_expr: Expr = {
         kind: "CallExpr",
         callee: caller,
@@ -275,6 +357,7 @@ export default class Parser {
     }
     //add(x + 5,foo) expression is parsed as arguments
     private parse_args(): Expr[] {
+        console.log("Trio Debug: Parsing function arguments");
         this.expect(TokenType.OpenParen, "Trio found unexpected token, expected opening parenthesis '(' for function call before arguments");
         const args = this.at().type == TokenType.CloseParen ? [] : this.parse_arguments_list();
         this.expect(TokenType.CloseParen, "Trio found unexpected token, expected closing parenthesis ')' for function call after arguments");
@@ -315,7 +398,7 @@ export default class Parser {
     // ObjectExpr
     // LogicalExpr
     // ComparisonExpr
-    // AdditiveExpr
+    // AdditiveExpr 
     // MultiplicativeExpr
     // CallExpr
     // MemberExpr

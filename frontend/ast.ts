@@ -1,4 +1,4 @@
-export type NodeType = "Program" | "VariableDeclaration" | "FunctionDeclaration" | "NumericLiteral" | "PropertyLiteral" | "ObjectLiteral" | "StringLiteral" | "Identifier" | "BinaryExpr" | "AssignmentExpr" | "MemberExpr" | "CallExpr" |"NewExpr";
+export type NodeType = "Program" | "VariableDeclaration" | "FunctionDeclaration" | "NumericLiteral" | "PropertyLiteral" | "ObjectLiteral" | "StringLiteral" | "Identifier" | "BinaryExpr" | "AssignmentExpr" | "MemberExpr" | "CallExpr" | "NewExpr" | "ForStatement" | "IfStatement" | "WhileStatement" | "ReturnStatement" | "BreakStatement" | "ContinueStatement";
 export interface Stemt{
     kind: NodeType;
 }
@@ -17,6 +17,19 @@ export interface FunctionDeclaration extends Stemt {
     parameters: string[];
     name: string;
     body: Stemt;
+}
+export interface ForStatement extends Stemt {
+    kind: "ForStatement";
+    init?: VariableDeclaration | Expr;
+    condition?: Expr;
+    increment?: Expr;
+    body: Stemt[];
+}
+export interface IfStatement extends Stemt {
+    kind: "IfStatement";
+    condition: Expr;
+    thenBody: Stemt[];
+    elseBody?: Stemt[];
 }
 export interface Expr extends Stemt {}
 //let x = {foo: 1, bar: 2};
