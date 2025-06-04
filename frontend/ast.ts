@@ -1,4 +1,4 @@
-export type NodeType = "Program" | "VariableDeclaration" | "NumericLiteral" | "PropertyLiteral" | "ObjectLiteral" | "Identifier" | "BinaryExpr" | "AssignmentExpr" | "MemberExpr" | "CallExpr";
+export type NodeType = "Program" | "VariableDeclaration" | "FunctionDeclaration" | "NumericLiteral" | "PropertyLiteral" | "ObjectLiteral" | "Identifier" | "BinaryExpr" | "AssignmentExpr" | "MemberExpr" | "CallExpr";
 export interface Stemt{
     kind: NodeType;
 }
@@ -11,6 +11,12 @@ export interface VariableDeclaration extends Stemt {
     const: boolean;
     identifier: string;
     value?: Expr;
+}
+export interface FunctionDeclaration extends Stemt {
+    kind: "FunctionDeclaration";
+    parameters: string[];
+    name: string;
+    body: Stemt;
 }
 export interface Expr extends Stemt {}
 //let x = {foo: 1, bar: 2};

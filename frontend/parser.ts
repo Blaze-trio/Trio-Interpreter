@@ -1,5 +1,5 @@
 import { ValueType } from '../runtime/value.ts';
-import { Stemt,Program, Expr, BinaryExpr, Identifier, NumericLiteral, VariableDeclaration, AssignmentExpr, PropertyLiteral, ObjectLiteral, CallExpr, MemberExpr} from './ast.ts';
+import { Stemt,Program, Expr, BinaryExpr, Identifier, NumericLiteral, VariableDeclaration, FunctionDeclaration, AssignmentExpr, PropertyLiteral, ObjectLiteral, CallExpr, MemberExpr} from './ast.ts';
 import { Token,tokenize,TokenType } from './lexer.ts';
 
 export default class Parser {
@@ -39,9 +39,39 @@ export default class Parser {
             case TokenType.Let:
             case TokenType.Const:
                 return this.parse_variable_declaration();
+            case TokenType.Fn:
+                return this.parse_function_declaration();
             default:
                 return this.parse_expr();
         }
+    }
+    private parse_function_declaration(): FunctionDeclaration {
+        this.eats();
+        const name = this.expect(TokenType.Identifier, "Trio found unexpected token, expected function name after TrioFunc declaration").value;
+        const args = this.parse_args();
+        const parameters: string[] = [];
+        for (const arg of args) {
+            if (arg.kind !== "Identifier") {
+                throw "Trio function declaration error: Expected argument to be an identifier inside TrioFunc declaration";
+            }
+            parameters.push((arg as Identifier).symbol);
+        }
+        this.expect(TokenType.OpenBrace, "Trio found unexpected token, expected opening brace '{' after TrioFunc arguments");
+        const body: Stemt[] = [];
+        while(this.at().type !== TokenType.EOF && this.at().type !== TokenType.CloseBrace) {
+            body.push(this.parse_stemt());
+        }
+        this.expect(TokenType.CloseBrace, "Trio found unexpected token, expected closing brace '}' after TrioFunc body");
+        const fn = {
+            kind: "FunctionDeclaration",
+            name,
+            parameters: parameters,
+            body: {
+                kind: "Program",
+                body,
+            },
+        } as FunctionDeclaration;
+        return fn;
     }
     //let or const
     private parse_variable_declaration(): Stemt {

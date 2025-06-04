@@ -1,3 +1,4 @@
+import { Stemt } from "../frontend/ast.ts";
 import Environment from "./environment.ts";
 
 export type ValueType = "null" | "number" | "boolean" | "string" | "object" | "array" | "function" | "undefined" | "nativefunction" | "class" | "instance";
@@ -37,4 +38,11 @@ export interface NativeFunctionValue extends runtimeValue {
 }
 export function MK_NATIVE_FUNCTION(call: FunctionCall) {
     return {type: "nativefunction", call} as NativeFunctionValue;
+}
+export interface FunctionValue extends runtimeValue {
+    type: "function",
+    name: string,
+    parameters: string[],
+    declarationEnv: Environment,
+    body: Stemt[],
 }

@@ -1,4 +1,4 @@
-import { NumberValue, runtimeValue, MK_NULL, ObjectValue, NativeFunctionValue } from "../value.ts";
+import { NumberValue, runtimeValue, MK_NULL, ObjectValue, NativeFunctionValue, FunctionValue } from "../value.ts";
 import { evaluate } from "../Interpreter.ts";
 import Environment from "../environment.ts";
 import { AssignmentExpr, BinaryExpr, CallExpr, Identifier, ObjectLiteral } from "../../frontend/ast.ts";
@@ -61,10 +61,26 @@ export function eval_object_expr(astNode: ObjectLiteral, env: Environment): runt
 export function eval_call_expr(astNode: CallExpr, env: Environment): runtimeValue {
   const args = astNode.args.map((arg) => evaluate(arg, env));
   const func = evaluate(astNode.callee, env);
-  if(func.type !== "nativefunction" && func.type !== "function") {
-    throw `Trio's interpreter error: Expected a function or native function, but got ${func.type}`;
+  if(func.type == "nativefunction") {
+     const result = (func as NativeFunctionValue).call(args, env);
+     return result;
   }
-  const result = (func as NativeFunctionValue).call(args, env);
-
-  return result;
+  if(func.type == "function") {
+    const userfunction = func as FunctionValue;
+    const scope = new Environment(userfunction.declarationEnv);
+    //create the varables for the parameters list
+    for(let i = 0; i < userfunction.parameters.length; i++) {
+        //TODO: check the bounds here 
+        //verify the arity of the function
+        const varname = userfunction.parameters[i];
+        scope.declareVariable(varname, args[i], false);
+    }
+    let result: runtimeValue = MK_NULL();
+    //evaluate the TrioFunc body line by line
+    for(const statement of userfunction.body) {
+        result = evaluate(statement, scope);
+    }
+    return result;
+  }
+  throw 'Trio\'s interpreter error: Call expression must be a function or native function, got ' + func.type;
 }

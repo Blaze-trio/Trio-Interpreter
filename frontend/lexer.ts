@@ -12,6 +12,7 @@ export enum TokenType{
     Let,//let
     Const,
     EOF, //end of file
+    Fn, //function
 }
 const KEYWORDS: Record<string, TokenType> = {
     "let": TokenType.Let,
@@ -20,7 +21,7 @@ const KEYWORDS: Record<string, TokenType> = {
     "else": TokenType.Identifier, 
     "while": TokenType.Identifier,
     "for": TokenType.Identifier, 
-    "function": TokenType.Identifier, 
+    "TrioFunc": TokenType.Fn, 
 };
 export interface Token {
     value: string;

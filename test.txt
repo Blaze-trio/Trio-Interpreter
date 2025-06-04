@@ -3,3 +3,18 @@ foo = foo / 4 + 5
 TrioPrint(foo, 45)
 const timeNow = TrioTime();
 TrioPrint(timeNow)
+TrioFunc add(x,y){
+    let result = x + y;
+    TrioPrint(result)
+    result
+}
+TrioFunc sub(){
+    TrioFunc add(x,y){
+        let result = x + y;
+        TrioPrint(result)
+        result
+    }
+}
+TrioPrint(add)
+const result = add(10,2);
+TrioPrint(result)
