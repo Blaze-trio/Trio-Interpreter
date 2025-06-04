@@ -1,4 +1,4 @@
-export type NodeType = "Program" | "VariableDeclaration" | "FunctionDeclaration" | "NumericLiteral" | "PropertyLiteral" | "ObjectLiteral" | "Identifier" | "BinaryExpr" | "AssignmentExpr" | "MemberExpr" | "CallExpr";
+export type NodeType = "Program" | "VariableDeclaration" | "FunctionDeclaration" | "NumericLiteral" | "PropertyLiteral" | "ObjectLiteral" | "StringLiteral" | "Identifier" | "BinaryExpr" | "AssignmentExpr" | "MemberExpr" | "CallExpr";
 export interface Stemt{
     kind: NodeType;
 }
@@ -60,4 +60,8 @@ export interface PropertyLiteral extends Expr {
 export interface ObjectLiteral extends Expr {
     kind: "ObjectLiteral";
     properties: PropertyLiteral[];
+}
+export interface StringLiteral extends Expr {
+    kind: "StringLiteral";
+    value: string;
 }

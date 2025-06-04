@@ -2,6 +2,7 @@ export enum TokenType{
     Number,
     Identifier,
     String,
+    Quote,
     Equals,
     SemiColon, Comma, Colon, Dot,
     OpenParen,// (
@@ -43,7 +44,10 @@ function isInt(src: string) {
     const c = src.charCodeAt(0);
     const bounds = ['0'.charCodeAt(0),'9'.charCodeAt(0)]; // 0-9
     return c >= bounds[0] && c <= bounds[1];
-}   
+}  
+function isQuote(char: string): boolean {
+    return char === '"' || char === "'";
+} 
 export function tokenize (sourceCode: string): Token[] {
     const tokens = new Array<Token>();
     const src = sourceCode.split("");
@@ -73,6 +77,8 @@ export function tokenize (sourceCode: string): Token[] {
             tokens.push(token(src.shift(), TokenType.Dot));
         }else if(src[0] == ':'){
             tokens.push(token(src.shift(), TokenType.Colon));
+        }else if(isQuote(src[0])){
+            tokens.push(token(src.shift(), TokenType.Quote));
         }else{
             //more than one character
             if(isInt(src[0])){
@@ -86,14 +92,14 @@ export function tokenize (sourceCode: string): Token[] {
                 while(src.length > 0 && isalpha(src[0])){
                     id += src.shift();
                 }
-                // check keywords
+                //check keywords
                 const reserved = KEYWORDS[id];
                 if(typeof reserved === "number"){
                     tokens.push(token(id, reserved));
                 }else{
                     tokens.push(token(id, TokenType.Identifier));
                 }
-            }else if(isskippable(src[0])){// skip useless junk
+            }else if(isskippable(src[0])){//skip useless junk
                 src.shift();
             }else{
                 console.log("Unknown character found by trio: " + src[0]);

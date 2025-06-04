@@ -18,3 +18,16 @@ TrioFunc sub(){
 TrioPrint(add)
 const result = add(10,2);
 TrioPrint(result)
+let simple = "hello world";
+let single = 'hello world';
+let double = ""hello world"";
+let triple = '''hello world''';
+let mixed = ""'complex string'"";
+let mega = """"""hello world''''''"""""";
+
+TrioPrint(simple)
+TrioPrint(single)
+TrioPrint(double)
+TrioPrint(triple)
+TrioPrint(mixed)
+TrioPrint(mega)

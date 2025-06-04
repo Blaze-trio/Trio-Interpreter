@@ -1,5 +1,5 @@
 import { ValueType } from '../runtime/value.ts';
-import { Stemt,Program, Expr, BinaryExpr, Identifier, NumericLiteral, VariableDeclaration, FunctionDeclaration, AssignmentExpr, PropertyLiteral, ObjectLiteral, CallExpr, MemberExpr} from './ast.ts';
+import { Stemt,Program, Expr, BinaryExpr, Identifier, NumericLiteral, VariableDeclaration, FunctionDeclaration, AssignmentExpr, PropertyLiteral, ObjectLiteral, CallExpr, MemberExpr, StringLiteral} from './ast.ts';
 import { Token,tokenize,TokenType } from './lexer.ts';
 
 export default class Parser {
@@ -34,6 +34,78 @@ export default class Parser {
         }
         return program;
     }
+    private parse_string_literal(): StringLiteral {
+        while (this.not_eof() && this.at().type === TokenType.Quote) {
+            this.eats();
+        } 
+        console.log("Trio Debug: Parsing string literal");
+        const contentTokens: Token[] = [];
+        let foundClosing = false;
+        while (this.not_eof()) {
+            if( this.at().type === TokenType.Quote) {
+                foundClosing = true;
+                this.eats();
+                break; 
+            }
+            contentTokens.push(this.eats());
+        }
+        if (!foundClosing) {
+           throw "Trio Parser: Unterminated string literal. Expected closing quotes"
+        }
+        while( this.not_eof() && this.at().type === TokenType.Quote) {
+            this.eats();
+        }
+        const stringContent = this.tokens_to_string(contentTokens);
+        console.log(`Trio Debug: Final string content: "${stringContent}"`);
+        
+        return {
+            kind: "StringLiteral",
+            value: stringContent
+        } as StringLiteral;
+    }
+    private tokens_to_string(tokens: Token[]): string {
+        let result = "";
+        let i = 0;
+        while (i < tokens.length) {
+            const token = tokens[i];
+            //handle escape sequences
+            if (token.type === TokenType.BinaryOperator && token.value === '/' && 
+                i + 1 < tokens.length && tokens[i + 1].value === '/') {
+                //skip comments if any got through
+                while (i < tokens.length && tokens[i].type !== TokenType.EOF) {
+                    i++;
+                }
+                continue;
+            }
+            //handle escape backslash
+            if (token.value === '\\' && i + 1 < tokens.length) {
+                i++;
+                const nextToken = tokens[i];
+                switch (nextToken.value) {
+                    case 'n': result += '\n'; break;
+                    case 't': result += '\t'; break;
+                    case 'r': result += '\r'; break;
+                    case '\\': result += '\\'; break;
+                    case '"': result += '"'; break;
+                    case "'": result += "'"; break;
+                    default: 
+                        result += nextToken.value;
+                }
+            } else {
+                if (token.type === TokenType.Identifier || token.type === TokenType.Number) {
+                    result += token.value;
+                    if (i + 1 < tokens.length && (tokens[i + 1].type === TokenType.Identifier || tokens[i + 1].type === TokenType.Number)) {
+                        result += " ";
+                    }
+                } else {
+                    result += token.value;
+                }
+            }
+            i++;
+        }
+        return result;
+    }
+
     private parse_stemt(): Stemt{
         switch(this.at().type) {
             case TokenType.Let:
@@ -237,6 +309,8 @@ export default class Parser {
                 return {kind: "Identifier", symbol: this.eats().value} as Identifier;
             case TokenType.Number:
                 return {kind: "NumericLiteral", value: parseFloat(this.eats().value)} as NumericLiteral;
+            case TokenType.Quote:
+                return this.parse_string_literal();
             case TokenType.OpenParen:
                 this.eats();
                 const expr = this.parse_expr();

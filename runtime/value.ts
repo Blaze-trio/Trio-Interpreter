@@ -20,6 +20,13 @@ export interface NumberValue extends runtimeValue {
 export function MK_NUMBER(n = 0): NumberValue {
     return {type: "number", value: n} as NumberValue;
 }
+export interface StringValue extends runtimeValue {
+    type: "string",
+    value: string;
+}
+export function MK_STRING(value = ""): StringValue {
+    return {type: "string", value} as StringValue;
+}
 export interface BooleanValue extends runtimeValue {
     type: "boolean",
     value: boolean;

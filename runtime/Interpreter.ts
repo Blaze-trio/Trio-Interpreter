@@ -1,5 +1,5 @@
-import { ValueType, runtimeValue, NumberValue, MK_NULL } from "./value.ts";
-import { NodeType, Stemt, NumericLiteral, BinaryExpr, Program, Identifier, VariableDeclaration, AssignmentExpr, ObjectLiteral, CallExpr, FunctionDeclaration } from "../frontend/ast.ts";
+import { ValueType, runtimeValue, NumberValue, MK_NULL, StringValue } from "./value.ts";
+import { NodeType, Stemt, NumericLiteral, BinaryExpr, Program, Identifier, VariableDeclaration, AssignmentExpr, ObjectLiteral, CallExpr, FunctionDeclaration, StringLiteral } from "../frontend/ast.ts";
 import Environment from "./environment.ts";
 import { eval_assignment_expr, eval_identifier, evaluateBinaryExpr, eval_object_expr, eval_call_expr } from "./eval/expressions.ts";
 import { evaluateFunctionDeclaration, evaluateProgram, evaluateVariableDeclaration } from "./eval/statments.ts";
@@ -8,6 +8,8 @@ export function evaluate(astNode: Stemt, env: Environment): runtimeValue {
     switch (astNode.kind) {
         case "NumericLiteral":
             return {value: (astNode as NumericLiteral).value, type: "number"} as NumberValue;
+        case "StringLiteral":
+            return {value: (astNode as StringLiteral).value, type: "string"} as StringValue;
         case "ObjectLiteral":
             return eval_object_expr(astNode as ObjectLiteral, env);
         case "CallExpr":
