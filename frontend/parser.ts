@@ -1,5 +1,5 @@
 import { ValueType } from '../runtime/value.ts';
-import { Stemt,Program, Expr, BinaryExpr, Identifier, NumericLiteral, VariableDeclaration, FunctionDeclaration, AssignmentExpr, PropertyLiteral, ObjectLiteral, CallExpr, MemberExpr, StringLiteral, NewExpr, IfStatement} from './ast.ts';
+import { Stemt,Program, Expr, BinaryExpr, Identifier, NumericLiteral, VariableDeclaration, FunctionDeclaration, AssignmentExpr, PropertyLiteral, ObjectLiteral, CallExpr, MemberExpr, StringLiteral, NewExpr, IfStatement, ForStatement} from './ast.ts';
 import { Token,tokenize,TokenType } from './lexer.ts';
 
 export default class Parser {
@@ -134,7 +134,7 @@ export default class Parser {
                 return this.parse_expr();
         }
     }
-    private parse_for_statement(): Stemt {
+    private parse_for_statement(): ForStatement {
         this.eats(); //consume 'TrioFor'
         this.expect(TokenType.OpenParen, "Trio found unexpected token, expected opening parenthesis '(' after TrioFor");
         let init: Stemt | undefined = undefined;
@@ -158,14 +158,14 @@ export default class Parser {
             increment = this.parse_expr();
         }
         this.expect(TokenType.CloseParen, "Trio found unexpected token, expected closing parenthesis ')' after TrioFor increment");
-        const body = this.parse_stemt();
+        const body = this.parse_block_or_statement();
         return {
             kind: "ForStatement",
             init,
             condition,
             increment,
-            body: [body],
-        } as Stemt;
+            body: body,
+        } as ForStatement;
     }
     private parse_if_statement(): IfStatement {
         this.eats(); //consume 'TrioIf'

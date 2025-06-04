@@ -33,3 +33,7 @@ TrioIf (y > 3) {
 } TrioElse {
     TrioPrint("y is not greater than 3")
 }
+
+TrioFor (TrioLet i = 0; i < 5; i = i + 1) {
+    TrioPrint(i)
+}
