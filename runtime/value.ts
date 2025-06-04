@@ -38,6 +38,15 @@ export interface ObjectValue extends runtimeValue {
     type: "object",
     properties: Map<string, runtimeValue>;
 }
+export interface ArrayValue extends runtimeValue {
+    type: "array",
+    elements: runtimeValue[];
+    size: number;
+}
+export function MK_ARRAY(size: number = 0): ArrayValue {
+    const elements = new Array<runtimeValue>(size).fill(MK_NULL());
+    return {type: "array", elements, size} as ArrayValue;
+}
 export type FunctionCall = (args: runtimeValue[], env: Environment) => runtimeValue;
 export interface NativeFunctionValue extends runtimeValue {
     type: "nativefunction",
@@ -53,3 +62,5 @@ export interface FunctionValue extends runtimeValue {
     declarationEnv: Environment,
     body: Stemt[],
 }
+
+

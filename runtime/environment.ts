@@ -1,4 +1,4 @@
-import { runtimeValue, MK_BOOL,MK_NULL, MK_NUMBER, MK_NATIVE_FUNCTION } from "./value.ts";
+import { runtimeValue, MK_BOOL,MK_NULL, MK_NUMBER, MK_NATIVE_FUNCTION, MK_ARRAY } from "./value.ts";
 export function createGlobalEnvironment() {
     //declare global variables and constants here my bros
     const env = new Environment();
@@ -14,6 +14,17 @@ export function createGlobalEnvironment() {
         return MK_NUMBER(Date.now());
     }
     env.declareVariable("TrioTime", MK_NATIVE_FUNCTION(timeFunction), true);
+    env.declareVariable("TrioArray", MK_NATIVE_FUNCTION((args, env) => {
+        if (args.length !== 1 || args[0].type !== "number") {
+            throw "Trio's interpreter error: TrioArray constructor requires exactly one numeric argument for size";
+        }
+        const size = (args[0] as any).value;
+        if (size < 0 || !Number.isInteger(size)) {
+            throw "Trio's interpreter error: Array size must be a non-negative integer";
+        }
+        return MK_ARRAY(size);
+    }), true);
+        
     return env;
 }
 export default class Environment{

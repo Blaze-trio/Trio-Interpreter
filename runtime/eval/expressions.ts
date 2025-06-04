@@ -1,7 +1,7 @@
-import { NumberValue, runtimeValue, MK_NULL, ObjectValue, NativeFunctionValue, FunctionValue } from "../value.ts";
+import { NumberValue, runtimeValue, MK_NULL, ObjectValue, NativeFunctionValue, FunctionValue, ArrayValue, StringValue } from "../value.ts";
 import { evaluate } from "../Interpreter.ts";
 import Environment from "../environment.ts";
-import { AssignmentExpr, BinaryExpr, CallExpr, Identifier, ObjectLiteral } from "../../frontend/ast.ts";
+import { AssignmentExpr, BinaryExpr, CallExpr, Identifier, MemberExpr, NewExpr, ObjectLiteral } from "../../frontend/ast.ts";
 
 function eval_numeric_binary_expr(lhs: NumberValue, rhs: NumberValue, operator: string): NumberValue {
     let result: number;
@@ -40,12 +40,35 @@ export function eval_identifier(astNode: Identifier, env: Environment): runtimeV
 }
 
 export function eval_assignment_expr(astNode: AssignmentExpr, env: Environment): runtimeValue {
-    if (astNode.assignee.kind !== "Identifier") {
-        throw 'Trio\'s interpreter error: Assignment target must be an identifier. $(JSON.stringify(astNode.assignee))';
+    if (astNode.assignee.kind === "Identifier") {
+        const identifier = (astNode.assignee as Identifier).symbol;
+        return env.assignVariable(identifier, evaluate(astNode.value, env));
+    } else if (astNode.assignee.kind === "MemberExpr") {
+        const memberExpr = astNode.assignee as MemberExpr;
+        const object = evaluate(memberExpr.object, env);
+        
+        if (object.type === "array" && memberExpr.computed) {
+            const arrayObj = object as ArrayValue;
+            const index = evaluate(memberExpr.property, env);
+            
+            if (index.type !== "number") {
+                throw "Trio's interpreter error: Array index must be a number";
+            }
+            
+            const idx = (index as NumberValue).value;
+            if (idx < 1 || idx > arrayObj.size) {
+                throw `Trio's interpreter error: Array index ${idx} out of bounds. Array indices start from 1 and end at ${arrayObj.size}`;
+            }
+            
+            const value = evaluate(astNode.value, env);
+            arrayObj.elements[idx - 1] = value; // Convert to 0-based indexing
+            return value;
+        }
     }
-    const identifier = (astNode.assignee as Identifier).symbol;
-    return env.assignVariable(identifier, evaluate(astNode.value, env));
+    
+    throw 'Trio\'s interpreter error: Invalid assignment target';
 }
+
 export function eval_object_expr(astNode: ObjectLiteral, env: Environment): runtimeValue {
   const object = { type: "object", properties: new Map() } as ObjectValue;
   for (const { key, value } of astNode.properties) {
@@ -58,6 +81,66 @@ export function eval_object_expr(astNode: ObjectLiteral, env: Environment): runt
 
   return object;
 }
+export function eval_new_expr(astNode: NewExpr, env: Environment): runtimeValue {
+    const constructor = evaluate(astNode.callee, env);
+    const args = astNode.args.map(arg => evaluate(arg, env));
+    if (constructor.type === "nativefunction") {
+        const nativeFunc = constructor as NativeFunctionValue;
+        return nativeFunc.call(args, env);
+    }
+    throw "Trio's interpreter error: Invalid constructor in new expression";
+}
+export function eval_member_expr(astNode: MemberExpr, env: Environment): runtimeValue {
+    const object = evaluate(astNode.object, env);
+    
+    if (object.type === "array") {
+        const arrayObj = object as ArrayValue;
+        
+        if (astNode.computed) {
+            // arr[index] syntax
+            const index = evaluate(astNode.property, env);
+            if (index.type !== "number") {
+                throw "Trio's interpreter error: Array index must be a number";
+            }
+            
+            const idx = (index as NumberValue).value;
+            if (idx < 1 || idx > arrayObj.size) {
+                throw `Trio's interpreter error: Array index ${idx} out of bounds. Array indices start from 1 and end at ${arrayObj.size}`;
+            }
+            
+            return arrayObj.elements[idx - 1]; // Convert to 0-based indexing
+        } else {
+            // arr.property syntax (like arr.size)
+            if (astNode.property.kind === "Identifier") {
+                const prop = (astNode.property as Identifier).symbol;
+                if (prop === "size") {
+                    return { type: "number", value: arrayObj.size } as NumberValue;
+                }
+            }
+        }
+    }
+    
+    if (object.type === "object") {
+        const obj = object as ObjectValue;
+        let property: runtimeValue;
+        
+        if (astNode.computed) {
+            property = evaluate(astNode.property, env);
+        } else {
+            if (astNode.property.kind !== "Identifier") {
+                throw "Trio's interpreter error: Non-computed member access requires identifier";
+            }
+            property = { type: "string", value: (astNode.property as Identifier).symbol } as StringValue;
+        }
+        
+        if (property.type === "string") {
+            return obj.properties.get((property as StringValue).value) || MK_NULL();
+        }
+    }
+    
+    return MK_NULL();
+}
+
 export function eval_call_expr(astNode: CallExpr, env: Environment): runtimeValue {
   const args = astNode.args.map((arg) => evaluate(arg, env));
   const func = evaluate(astNode.callee, env);

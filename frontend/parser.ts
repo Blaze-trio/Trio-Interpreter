@@ -1,5 +1,5 @@
 import { ValueType } from '../runtime/value.ts';
-import { Stemt,Program, Expr, BinaryExpr, Identifier, NumericLiteral, VariableDeclaration, FunctionDeclaration, AssignmentExpr, PropertyLiteral, ObjectLiteral, CallExpr, MemberExpr, StringLiteral} from './ast.ts';
+import { Stemt,Program, Expr, BinaryExpr, Identifier, NumericLiteral, VariableDeclaration, FunctionDeclaration, AssignmentExpr, PropertyLiteral, ObjectLiteral, CallExpr, MemberExpr, StringLiteral, NewExpr} from './ast.ts';
 import { Token,tokenize,TokenType } from './lexer.ts';
 
 export default class Parser {
@@ -33,6 +33,24 @@ export default class Parser {
             program.body.push(this.parse_stemt());
         }
         return program;
+    }
+    private parse_new_expr(): NewExpr {
+        this.eats(); // consume 'TrioNew'
+        
+        // Parse the constructor identifier (like TrioArray)
+        const callee = this.parse_primary_expr();
+        
+        // Now expect the arguments in parentheses
+        if(this.at().type !== TokenType.OpenParen) {
+            throw "Trio Parser: Expected opening parenthesis '(' after constructor name in new expression";
+        }
+        
+        const args = this.parse_args();
+        return {
+            kind: "NewExpr",
+            callee,
+            args,
+        } as NewExpr;
     }
     private parse_string_literal(): StringLiteral {
         while (this.not_eof() && this.at().type === TokenType.Quote) {
@@ -311,6 +329,8 @@ export default class Parser {
                 return {kind: "NumericLiteral", value: parseFloat(this.eats().value)} as NumericLiteral;
             case TokenType.Quote:
                 return this.parse_string_literal();
+            case TokenType.New:
+                return this.parse_new_expr();
             case TokenType.OpenParen:
                 this.eats();
                 const expr = this.parse_expr();

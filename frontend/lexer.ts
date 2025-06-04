@@ -12,17 +12,19 @@ export enum TokenType{
     BinaryOperator,
     Let,//let
     Const,
+    New,
     EOF, //end of file
     Fn, //function
 }
 const KEYWORDS: Record<string, TokenType> = {
-    "let": TokenType.Let,
-    "const": TokenType.Const,
-    "if": TokenType.Identifier, 
-    "else": TokenType.Identifier, 
-    "while": TokenType.Identifier,
-    "for": TokenType.Identifier, 
+    "TrioLet": TokenType.Let,
+    "TrioConst": TokenType.Const,
+    "TrioIf": TokenType.Identifier, 
+    "TrioElse": TokenType.Identifier, 
+    "TrioWhile": TokenType.Identifier,
+    "TrioFor": TokenType.Identifier, 
     "TrioFunc": TokenType.Fn, 
+    "TrioNew": TokenType.New,
 };
 export interface Token {
     value: string;
@@ -48,6 +50,9 @@ function isInt(src: string) {
 function isQuote(char: string): boolean {
     return char === '"' || char === "'";
 } 
+function isAlphaNumric(src: string):boolean{
+    return isalpha(src) || isInt(src) || src == '_';
+}
 export function tokenize (sourceCode: string): Token[] {
     const tokens = new Array<Token>();
     const src = sourceCode.split("");
@@ -89,7 +94,7 @@ export function tokenize (sourceCode: string): Token[] {
                 tokens.push(token(num, TokenType.Number));
             }else if(isalpha(src[0])){
                 let id = "";
-                while(src.length > 0 && isalpha(src[0])){
+                while(src.length > 0 && isAlphaNumric(src[0])){
                     id += src.shift();
                 }
                 //check keywords

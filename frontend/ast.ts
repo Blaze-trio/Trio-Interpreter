@@ -1,4 +1,4 @@
-export type NodeType = "Program" | "VariableDeclaration" | "FunctionDeclaration" | "NumericLiteral" | "PropertyLiteral" | "ObjectLiteral" | "StringLiteral" | "Identifier" | "BinaryExpr" | "AssignmentExpr" | "MemberExpr" | "CallExpr";
+export type NodeType = "Program" | "VariableDeclaration" | "FunctionDeclaration" | "NumericLiteral" | "PropertyLiteral" | "ObjectLiteral" | "StringLiteral" | "Identifier" | "BinaryExpr" | "AssignmentExpr" | "MemberExpr" | "CallExpr" |"NewExpr";
 export interface Stemt{
     kind: NodeType;
 }
@@ -41,6 +41,11 @@ export interface MemberExpr extends Expr {
 }
 export interface CallExpr extends Expr {
     kind: "CallExpr";
+    callee: Expr;
+    args: Expr[];
+}
+export interface NewExpr extends Expr {
+    kind: "NewExpr";
     callee: Expr;
     args: Expr[];
 }

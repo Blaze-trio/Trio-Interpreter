@@ -1,29 +1,10 @@
-let foo = 5 * 2;
-foo = foo / 4 + 5
-TrioPrint(foo, 45)
-const timeNow = TrioTime();
-TrioPrint(timeNow)
-TrioFunc add(x,y){
-    let result = x + y;
-    TrioPrint(result)
-    result
-}
-TrioFunc sub(){
-    TrioFunc add(x,y){
-        let result = x + y;
-        TrioPrint(result)
-        result
-    }
-}
-TrioPrint(add)
-const result = add(10,2);
-TrioPrint(result)
-let simple = "hello world";
-let single = 'hello world';
-let double = ""hello world"";
-let triple = '''hello world''';
-let mixed = ""'complex string'"";
-let mega = """"""hello world''''''"""""";
+
+TrioLet simple = "hello world";
+TrioLet single = 'hello world';
+TrioLet double = ""hello world"";
+TrioLet triple = '''hello world''';
+TrioLet mixed = ""'complex string'"";
+TrioLet mega = """"""hello world''''''"""""";
 
 TrioPrint(simple)
 TrioPrint(single)
@@ -31,3 +12,14 @@ TrioPrint(double)
 TrioPrint(triple)
 TrioPrint(mixed)
 TrioPrint(mega)
+
+TrioLet arr = TrioNew TrioArray(4);
+TrioPrint(simple)
+arr[1] = "Hello"
+TrioPrint(arr[1])
+arr[2] = 42
+TrioPrint(arr[2])
+arr[3] = true
+TrioPrint(arr[3])
+arr[4] = TrioNew TrioArray(2)
+TrioPrint(arr[4])
