@@ -35,5 +35,5 @@ TrioIf (y > 3) {
 }
 
 TrioFor (TrioLet i = 0; i < 5; i = i + 1) {
-    TrioPrint(i)
+    TrioPrint(i,1)
 }
